@@ -1,15 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import Slider from "@mui/material/Slider";
+import Button from "@mui/material/Button";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import Switch from "@mui/material/Switch";
+import FormControlLabel from "@mui/material/FormControlLabel";
 
 type WaveType = "sine" | "square" | "sawtooth" | "triangle";
 type Note =
@@ -47,7 +42,7 @@ const noteToFrequency = (note: Note, octave: number): number => {
   return baseFreq * Math.pow(2, semitones / 12);
 };
 
-const Synthesizer = () => {
+const ReactSimpleSynthesizer4 = () => {
   const [frequency, setFrequency] = useState(440);
   const [volume, setVolume] = useState(0.5);
   const [waveType, setWaveType] = useState<WaveType>("sine");
@@ -198,27 +193,32 @@ const Synthesizer = () => {
       document.addEventListener("touchend", handleRelease);
     };
 
-  const handleFrequencyChange = (newFrequency: number[]) => {
-    setFrequency(newFrequency[0]);
+  const handleFrequencyChange = (_: Event, newFrequency: number | number[]) => {
+    const frequency = Array.isArray(newFrequency)
+      ? newFrequency[0]
+      : newFrequency;
+    setFrequency(frequency);
     if (oscillatorRef.current) {
       oscillatorRef.current.frequency.setValueAtTime(
-        newFrequency[0],
+        frequency,
         audioContextRef.current!.currentTime
       );
     }
   };
 
-  const handleVolumeChange = (newVolume: number[]) => {
-    setVolume(newVolume[0]);
+  const handleVolumeChange = (_: Event, newVolume: number | number[]) => {
+    const volume = Array.isArray(newVolume) ? newVolume[0] : newVolume;
+    setVolume(volume);
     if (gainNodeRef.current) {
       gainNodeRef.current.gain.setValueAtTime(
-        newVolume[0],
+        volume,
         audioContextRef.current!.currentTime
       );
     }
   };
 
-  const handleWaveTypeChange = (newWaveType: WaveType) => {
+  const handleWaveTypeChange = (event: SelectChangeEvent) => {
+    const newWaveType = event.target.value as WaveType;
     setWaveType(newWaveType);
     if (oscillatorRef.current) {
       oscillatorRef.current.type = newWaveType;
@@ -252,32 +252,33 @@ const Synthesizer = () => {
   return (
     <div className="p-6 max-w-2xl mx-auto bg-white rounded-xl shadow-md space-y-4">
       <h1 className="text-2xl font-bold text-center">
-        React Simple Synthesizer
+        React Simple Synthesizer 4
       </h1>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
             Wave Type
           </label>
-          <Select onValueChange={handleWaveTypeChange} value={waveType}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select wave type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sine">Sine</SelectItem>
-              <SelectItem value="square">Square</SelectItem>
-              <SelectItem value="sawtooth">Sawtooth</SelectItem>
-              <SelectItem value="triangle">Triangle</SelectItem>
-            </SelectContent>
+          <Select size="small" value={waveType} onChange={handleWaveTypeChange}>
+            <MenuItem value="sine">Sine</MenuItem>
+            <MenuItem value="square">Square</MenuItem>
+            <MenuItem value="sawtooth">Sawtooth</MenuItem>
+            <MenuItem value="triangle">Triangle</MenuItem>
           </Select>
         </div>
         <div className="flex items-center space-x-2">
-          <Switch
-            id="use-note"
-            checked={useNote}
-            onCheckedChange={setUseNote}
+          <FormControlLabel
+            control={
+              <Switch
+                id="use-note"
+                checked={useNote}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setUseNote(event.target.checked)
+                }
+              />
+            }
+            label="Use Note"
           />
-          <Label htmlFor="use-note">Use Note</Label>
         </div>
       </div>
       {useNote ? (
@@ -329,7 +330,7 @@ const Synthesizer = () => {
             max={2000}
             step={1}
             value={[frequency]}
-            onValueChange={handleFrequencyChange}
+            onChange={handleFrequencyChange}
           />
         </div>
       )}
@@ -342,7 +343,7 @@ const Synthesizer = () => {
           max={1}
           step={0.01}
           value={[volume]}
-          onValueChange={handleVolumeChange}
+          onChange={handleVolumeChange}
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -355,7 +356,9 @@ const Synthesizer = () => {
             max={2}
             step={0.01}
             value={[attack]}
-            onValueChange={(value) => setAttack(value[0])}
+            onChange={(_: Event, value: number | number[]) =>
+              setAttack(Array.isArray(value) ? value[0] : value)
+            }
           />
         </div>
         <div className="space-y-2">
@@ -367,7 +370,9 @@ const Synthesizer = () => {
             max={2}
             step={0.01}
             value={[decay]}
-            onValueChange={(value) => setDecay(value[0])}
+            onChange={(_: Event, value: number | number[]) =>
+              setDecay(Array.isArray(value) ? value[0] : value)
+            }
           />
         </div>
         <div className="space-y-2">
@@ -379,7 +384,9 @@ const Synthesizer = () => {
             max={1}
             step={0.01}
             value={[sustain]}
-            onValueChange={(value) => setSustain(value[0])}
+            onChange={(_: Event, value: number | number[]) =>
+              setSustain(Array.isArray(value) ? value[0] : value)
+            }
           />
         </div>
         <div className="space-y-2">
@@ -391,7 +398,9 @@ const Synthesizer = () => {
             max={2}
             step={0.01}
             value={[release]}
-            onValueChange={(value) => setRelease(value[0])}
+            onChange={(_: Event, value: number | number[]) =>
+              setRelease(Array.isArray(value) ? value[0] : value)
+            }
           />
         </div>
       </div>
@@ -404,11 +413,14 @@ const Synthesizer = () => {
           max={1}
           step={0.01}
           value={[reverbAmount]}
-          onValueChange={(value) => setReverbAmount(value[0])}
+          onChange={(_: Event, value: number | number[]) =>
+            setReverbAmount(Array.isArray(value) ? value[0] : value)
+          }
         />
       </div>
       {!useNote && (
         <Button
+          variant="contained"
           onClick={toggleSound}
           className="w-full"
           aria-pressed={isPlaying}
@@ -420,4 +432,4 @@ const Synthesizer = () => {
   );
 };
 
-export default Synthesizer;
+export default ReactSimpleSynthesizer4;
